@@ -1,11 +1,11 @@
 import React from 'react';
-import Canvas from '../canvas.jsx';
+import Canvas from '../templates/canvas.jsx';
 
 function App() {
   
   return (    
       <Canvas>
-          
+          hello page
       </Canvas>
   );
 }
