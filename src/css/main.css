@@ -12,9 +12,7 @@ main {
 .canvas {
   min-width: 100vw;
   min-height: 100vh;
-  outline: 3px solid rgb(174, 41, 8); 
-  outline-offset: calc(var(--grid-gap-tiny) * -1);
-  padding: var(--grid-gap-tiny)
+  /* padding: var(--grid-gap-tiny) */
 }
 
 main {
@@ -26,42 +24,14 @@ main {
   position: relative;
 
   background-image: radial-gradient(var(--middleground) 2px, transparent 2px);
-  background-size: var(--grid-gap-large) var(--grid-gap-large);
+  background-size: var(--golden-number) var(--golden-number);
   background-color: var(--background);
-  background-position: var(--grid-gap-small) var(--grid-gap-small);
+  background-position: var(--golden-half-minus) var(--golden-half-minus);
 
   display: grid;
   grid-template-columns: var(--body-grid-cols);
   width: 100vw;
   max-width: 100vw;
-}
-
-main {
-  display: grid;
-  grid-template-columns: var(--main-grid-cols);
-  padding: 0;
-  row-gap: calc(var(--vert-gap-largest) * 2);
-}
-
-section {
-  display: grid;
-  grid-template-columns: var(--section-grid-cols);
-  column-gap: var(--section-grid-gap);
-  row-gap: var(--vert-gap-large);
-  grid-template-rows: auto;
-  height: fit-content;
-}
-
-section>* {
-  display: grid;
-  grid-column: var(--cols);
-  grid-template-rows: auto;
-  gap: var(--vert-gap-medium);
-}
-
-i {
-  font-style: normal;
-  white-space: nowrap;
 }
 
 .opacity-85 {
@@ -138,6 +108,10 @@ i {
 
     --tooltip-base: var(--foreground);
     --tooltip-front: var(--background);
+
+    /* Golden Snap Number */
+    --golden-number: 40px;
+    --golden-half-minus: -20px;
 
     /* Grid Gaps */
     --grid-gap-base: 4px;

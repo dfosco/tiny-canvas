@@ -16,7 +16,17 @@ body .draggable:not(:active) {
     width: fit-content;
 }
 
-.draggable:active,
+.draggable.on article {
+  transform: scale(1.1);
+  transform: rotate(2deg); 
+  transition: transform 0.20ms;
+}
+
+.draggable.off article {
+
+} 
+
+/* .draggable:active,
 .draggable:hover {
     border-radius: 6;
     outline: 3px solid rgba(127, 156, 245, 0.80);
@@ -47,4 +57,4 @@ body .draggable:not(:active) {
     background: var(--active);
     border-radius: 2px;
     z-index: 1;
-}
+} */
