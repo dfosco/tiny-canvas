@@ -1,5 +1,9 @@
 /* === === === Main Layout === === === */
 
+body {
+  margin: 0;
+}
+
 html {
   display: flex;
 }
@@ -12,7 +16,6 @@ main {
 .canvas {
   min-width: 100vw;
   min-height: 100vh;
-  /* padding: var(--grid-gap-tiny) */
 }
 
 main {
