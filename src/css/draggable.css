@@ -10,51 +10,48 @@ body .draggable:not(:active) {
     touch-action: none;
 }
 
-.draggable {
+.drag, .draggable {
     position: relative;
-    z-index: 200;
+    /* z-index: 200; */
     width: fit-content;
 }
 
-.draggable.on article {
-  transform: scale(1.1);
-  transform: rotate(2deg); 
-  transition: transform 0.20ms;
+.on .draggable {
+
+  transition: transform ease-in-out 100ms;
 }
 
-.draggable.off article {
-
+.drag:not(.on) .draggable {
+  /* transition: transform ease-in-out 50ms; */
 } 
 
-/* .draggable:active,
+.draggable:active,
 .draggable:hover {
-    border-radius: 6;
-    outline: 3px solid rgba(127, 156, 245, 0.80);
-    outline-offset: 4px;
-    background-color: rgba(127, 156, 245, 0.35);
+    border-radius: var(--small);
+    box-shadow: 0 0 0 var(--smaller) var(--background), 0 0 0 var(--small) rgba(127, 156, 245, 0.80), 0 2px 4px 20px hsl(216deg 61% 23% / 20%);
     transition: background-color ease-in 150ms;
 }
 
-.draggable:hover::after {
+/* .draggable:hover::after {
     content: '';
     position: absolute;
-    left: calc(var(--grid-gap-small) * -1);
-    top: calc(var(--grid-gap-small) * -1);
-    width: var(--grid-gap-small);
-    height: var(--grid-gap-small);
+    left: calc(var(--small) * -1);
+    top: calc(var(--small) * -1);
+    width: var(--tiny);
+    height: var(--tiny);
     background: var(--active);
-    border-radius: 2px;
+    border-radius: var(--max);
     z-index: 1;
 }
 
 .draggable:hover::before {
     content: '';
     position: absolute;
-    right: calc(var(--grid-gap-small) * -1);
-    bottom: calc(var(--grid-gap-small) * -1);
-    width: var(--grid-gap-small);
-    height: var(--grid-gap-small);
+    right: calc(var(--small) * -1);
+    bottom: calc(var(--small) * -1);
+    width: var(--tiny);
+    height: var(--tiny);
     background: var(--active);
-    border-radius: 2px;
+    border-radius: var(--max);
     z-index: 1;
 } */
