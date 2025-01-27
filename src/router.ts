@@ -4,9 +4,9 @@
 import { components, hooks, utils } from '@generouted/react-router/client'
 
 export type Path =
-  | `/`
-  | `/hello`
-  | `/primer`
+  | `/storyboard`
+  | `/storyboard/hello`
+  | `/storyboard/primer`
 
 export type Params = {
   

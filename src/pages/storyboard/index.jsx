@@ -1,5 +1,5 @@
 import React from 'react';
-import Canvas from '../templates/canvas.jsx';
+import Canvas from '../../templates/canvas.jsx';
 
 function App() {
   
