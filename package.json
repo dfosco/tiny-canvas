@@ -4,6 +4,7 @@
   "version": "0.6.0",
   "type": "module",
   "homepage": "https://dfosco.github.io/storyboard/",
+  "license":"MIT",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
