@@ -14,7 +14,7 @@ function Draggable({ children }) {
   const queue = useRef(getQueue(dragId)).current;
 
   // Add new effect for on-translation class
-  const translation_ms = 150;
+  const translation_ms = 250;
 
   const [onTranslation, setOnTranslation] = useState(false);
 
@@ -28,7 +28,7 @@ function Draggable({ children }) {
       const timer = setTimeout(() => {
         draggableEl.classList.remove('on-translation');
         setOnTranslation(false);
-      }, translation_ms);
+      }, translation_ms*4);
 
       return () => clearTimeout(timer);
     }

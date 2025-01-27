@@ -6,7 +6,7 @@ body .draggable:not(:active) {
 } 
 
 .on-translation {
-  transition: transform var(--translation_ms) ease-in-out;
+  transition: transform calc(var(--translation_ms)*2) cubic-bezier(.78,.1,.51,.78) var(--translation_ms);
 }
 
 .drag {
