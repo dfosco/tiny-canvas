@@ -4,8 +4,6 @@ import generouted from '@generouted/react-router/plugin'
 import mdx from '@mdx-js/rollup'
 
 export default defineConfig({ 
-  // Keep this for personal gh pages deployment, remove it for org-deployments
-  base: '/storyboard/',
   plugins: [
     react(),
     mdx(),
