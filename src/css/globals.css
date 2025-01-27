@@ -62,7 +62,7 @@
     --font-normal: 100%;
     --font-wide: 125%;
 
-    /* Golden Snap Number */
+    /* Golden Number that defines visual and functional grid */
     --golden-number: 36px;
     --golden-half-minus: calc(var(--golden-number) / -2);
 

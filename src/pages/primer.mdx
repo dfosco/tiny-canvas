@@ -1,14 +1,12 @@
 import Canvas from '../templates/canvas.jsx'
 import { Box, Button } from '@primer/react'
 
-<Canvas>
+<Canvas grid={true}>
   <Box 
-  id="box1"
   sx={{ 
     display: 'flex',
     flexDirection: 'column',
     backgroundColor: 'var(--bgColor-muted)',
-    mb: 2,
     border: '1px solid',
     borderColor: 'border.default',
     borderRadius: 'var(--borderRadius-large)',
@@ -18,12 +16,10 @@ import { Box, Button } from '@primer/react'
   <Button variant="primary">Save</Button>
   </Box>
   <Box 
-  id="box2"
   sx={{ 
     display: 'flex',
     flexDirection: 'column',
     backgroundColor: 'var(--bgColor-muted)',
-    mb: 2,
     border: '1px solid',
     borderColor: 'border.default',
     borderRadius: 'var(--borderRadius-large)',

@@ -17,6 +17,8 @@ body .draggable:not(:active) {
 .draggable {
     position: relative;
     width: fit-content;
+    height: min-content;
+    overflow: hidden;
     border-radius: var(--borderRadius-large);
     box-shadow: var(--shadow-resting-small);
 }
@@ -38,6 +40,13 @@ body .draggable:not(:active) {
 .draggable:active::after,
 .draggable:hover::after {
   opacity: 1;
+}
+
+.on-translation .draggable,
+.draggable:active,
+.draggable:hover {
+  outline: 3px solid var(--borderColor-muted);
+  outline-offset: -2px;
 }
 
 .draggable:active > :where(h1,h2,h3,h4,h5,h6,p,span,div,article) {
