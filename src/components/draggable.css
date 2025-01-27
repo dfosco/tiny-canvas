@@ -1,12 +1,15 @@
 /* === === === Draggable Styles === === === */
 
 /* Fix pan-on-drag for touchscreens */
-
-:global(body .draggable:not(:active)) {
+body .draggable:not(:active) {
   touch-action: none;
 } 
 
-:global(.drag) {
+.on-translation {
+  transition: transform calc(var(--translation_ms)*2) cubic-bezier(.78,.1,.51,.78) var(--translation_ms);
+}
+
+.drag {
   position: relative;
   width: fit-content;
 }
@@ -14,6 +17,8 @@
 .draggable {
     position: relative;
     width: fit-content;
+    height: min-content;
+    overflow: hidden;
     border-radius: var(--borderRadius-large);
     box-shadow: var(--shadow-resting-small);
 }
@@ -31,9 +36,17 @@
   transition: opacity 0.3s ease-in-out;
 }
 
+.on-translation .draggable::after,
 .draggable:active::after,
 .draggable:hover::after {
   opacity: 1;
+}
+
+.on-translation .draggable,
+.draggable:active,
+.draggable:hover {
+  outline: 3px solid var(--borderColor-muted);
+  outline-offset: -2px;
 }
 
 .draggable:active > :where(h1,h2,h3,h4,h5,h6,p,span,div,article) {
