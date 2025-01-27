@@ -9,7 +9,8 @@
   font-family: var(--font-stack);
   position: relative;
 
-  background-image: radial-gradient(var(--bgColor-disabled) 2px, transparent 2px);
+  background-color: var(--bgColor-default);
+  background-image: radial-gradient(var(--overlay-backdrop-bgColor) 2px, transparent 2px);
   background-size: var(--golden-number) var(--golden-number);
   background-position: var(--golden-half-minus) var(--golden-half-minus);
 

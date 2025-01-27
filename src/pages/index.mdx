@@ -1,0 +1,21 @@
+import Canvas from '../templates/canvas.jsx'
+import { Box, Button } from '@primer/react'
+import { DownloadIcon } from '@primer/octicons-react'
+import {boxStyles} from '../templates/utils.js'
+import { ThemeToggle } from '../components/ThemeToggle.jsx'
+import { StateToggle } from '../components/StateToggle.jsx'
+
+<Canvas grid={false}>
+
+<Box id="box4" sx={boxStyles}>
+  <ThemeToggle />
+</Box>
+  <Box id="box1" sx={{...boxStyles, backgroundColor: 'var(--bgColor-default)'}}>
+    <Button size="large" variant="primary">Save</Button>
+    <Button size="large" variant="secondary">Edit</Button>
+    <Button size="large" variant="danger">Delete</Button>
+  </Box>
+<Box id="box3">
+  <StateToggle />
+</Box>
+</Canvas>

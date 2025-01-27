@@ -77,3 +77,17 @@ export const saveDrag = (dragId, x, y) => {
     console.error('Error saving drag position:', error);
   }
 };
+
+
+// Box sx styles lol
+export const boxStyles = {
+  display: 'flex',
+  flexDirection: 'column',
+  backgroundColor: 'var(--bgColor-muted)',
+  border: '1px solid',
+  borderColor: 'border.default',
+  borderRadius: 'var(--borderRadius-large)',
+  padding: 4,
+  minWidth: '300px',
+  gap: 2,
+}
