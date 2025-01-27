@@ -1,16 +1,15 @@
 /* === === === Draggable Styles === === === */
 
 /* Fix pan-on-drag for touchscreens */
-
-:global(.on-transition) {
-  transition: transform 0.15 ease-in-out
-}
-
-:global(body .draggable:not(:active)) {
+body .draggable:not(:active) {
   touch-action: none;
 } 
 
-:global(.drag) {
+.on-translation {
+  transition: transform var(--translation_ms) ease-in-out;
+}
+
+.drag {
   position: relative;
   width: fit-content;
 }
@@ -35,6 +34,7 @@
   transition: opacity 0.3s ease-in-out;
 }
 
+.on-translation .draggable::after,
 .draggable:active::after,
 .draggable:hover::after {
   opacity: 1;

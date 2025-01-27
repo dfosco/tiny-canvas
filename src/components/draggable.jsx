@@ -1,21 +1,41 @@
 import { useRef, useEffect, useState } from 'react';
 import { useDraggable } from '@neodrag/react';
-import styles from "./draggable.module.css";
+import "./draggable.css";
 import "../css/globals.css";
 import { findDragId, refreshStorage, getQueue, saveDrag } from '../templates/utils';
 
+
 // Pull value from --golden-number in globals.css, trim `px` from the end, and save it as a int in a const
 const golden = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--golden-number')) / 2;
-
-
 
 function Draggable({ children }) {
   const draggableRef = useRef(null);
   const dragId = useRef(findDragId(children)).current;
   const queue = useRef(getQueue(dragId)).current;
+
+  // Add new effect for on-translation class
+  const translation_ms = 150;
+
+  const [onTranslation, setOnTranslation] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--translation_ms', `${translation_ms}ms`);
+    const draggableEl = draggableRef.current;
+    if (draggableEl) {
+      draggableEl.classList.add('on-translation');
+      setOnTranslation(true);
+
+      const timer = setTimeout(() => {
+        draggableEl.classList.remove('on-translation');
+        setOnTranslation(false);
+      }, translation_ms);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
   
   useEffect(() => {
-    // On page load, apply class .on-transition to all draggables and remove it after 150ms (coming from a variable)
+    // On page load, apply class .on-translation to all draggables and remove it after 150ms (coming from a variable)
     refreshStorage();
     if (draggableRef.current && queue) {
       setPosition({ x: queue.x, y: queue.y }); 
@@ -46,14 +66,16 @@ function Draggable({ children }) {
   });
 
   const rotationVariations = useRef(Math.random() * 4 - 2).current;
-  const rotation = isDragging ? `${rotationVariations}deg` : '0deg';
+  const rotation = (isDragging || onTranslation) ? `${rotationVariations}deg` : '0deg';
+  document.documentElement.style.setProperty('--rotation', `${rotation}`);
   
   return (
     <article 
       ref={draggableRef} 
       style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+      className="on-translation"
     >
-      <div className={styles.draggable} style={{ transform: isDragging && `rotate(${rotation})`, transition: 'transform ease-in-out 150ms' }}>
+      <div className="draggable" style={{ transform: (isDragging || onTranslation) && `rotate(${rotation})`, translation: 'transform ease-in-out 150ms' }}>
         {children}
       </div>
     </article>
