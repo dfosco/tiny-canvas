@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './css/reset.css'
 import './css/globals.css'
-import { Routes } from '@generouted/react-router'
+import { routes } from '@generouted/react-router'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { ThemeProvider, BaseStyles } from '@primer/react'
 
