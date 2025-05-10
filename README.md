@@ -1,8 +1,11 @@
-# React + Vite
+# StoryboardJS
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+StoryboardJS is a simple playground to render React components on a canvas.
 
-Currently, two official plugins are available:
+Use it as a simple development environment, designer documentation, or component showcase.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Might become something bigger one day, but probably not? Drop an issue / PR if you'd like it to do something else!
+
+---
+
+MIT License 
