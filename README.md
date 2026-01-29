@@ -1,6 +1,6 @@
-# Storyboard Canvas
+# Tiny Canvas
 
-Storyboard Canvas is a simple playground to render React components on a canvas.
+tiyn canvas is a simple playground to render React components on a canvas.
 
 Use it as a simple development environment, designer documentation, or component showcase.
 
