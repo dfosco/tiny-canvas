@@ -4,7 +4,7 @@ import generouted from '@generouted/react-router/plugin'
 import mdx from '@mdx-js/rollup'
 
 export default defineConfig({ 
-  base: '/storyboardjs/',
+  base: '/tiny-canvas/',
   plugins: [
     react(),
     mdx(),
