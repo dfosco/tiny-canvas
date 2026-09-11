@@ -1,5 +1,55 @@
 # @dfosco/tiny-canvas
 
+## 5.5.0
+
+### Minor Changes
+
+- Add `Slides` as a first-class package surface with ordered cursor and click
+  steps, controlled or uncontrolled navigation, keyboard shortcuts,
+  conclusions, stateful iframe URLs, scroll preservation, and themeable neutral
+  panel styles.
+- Add `Frame` element targeting and vertical offsets for aligning same-origin
+  iframe content after load.
+- Add the `tiny-canvas-snap` CLI for light and dark frame snapshots with static
+  JSX validation, stateful URL preservation, target scrolling, deterministic
+  output, and source prop updates.
+- Add a Statefully-backed demo for exact shareable screen URLs.
+
+### Patch Changes
+
+- Complete Frame refresh, deep-link, dormant-poster capture, and loaded
+  same-origin iframe viewport capture behavior.
+- Restore frame navigation observers and scroll animations during reload and
+  unmount cleanup.
+
+## 5.4.3
+
+### Patch Changes
+
+- Restore loaded-frame screenshots by using browser-native DOM rasterization
+  that supports modern CSS.
+
+## 5.4.2
+
+### Patch Changes
+
+- Show a bottom-center viewport toast after a Frame screenshot is copied.
+
+## 5.4.1
+
+### Patch Changes
+
+- Capture the same-origin iframe viewport directly without browser chrome,
+  keep the capture action available for copying a dormant Frame thumbnail, and
+  add copied board links that focus their addressed Frame.
+
+## 5.4.0
+
+### Minor Changes
+
+- Add Frame header actions to reload the embedded page and capture the visible
+  iframe to the clipboard through the browser's current-tab capture flow.
+
 ## 5.3.0
 
 ### Minor Changes

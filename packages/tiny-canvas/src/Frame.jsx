@@ -6,9 +6,11 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import ResizableBlock from "./ResizableBlock";
 import { CanvasContext } from "./CanvasContext";
 import { authorizeCanvasChild } from "./canvasChild";
+import { writeClipboardText } from "./clipboard";
 import { getCanvasEnvironment } from "./PageSelector";
 import useFrameLoadPolicy from "./useFrameLoadPolicy";
 import {
@@ -17,6 +19,7 @@ import {
   buildFrameNavigationDisplayRoute,
   buildFrameOpenHref,
 } from "./frameUrl";
+import { scrollFrameToElement } from "./frameScroll";
 
 const DEFAULT_MIN_WIDTH = 320;
 const DEFAULT_MIN_HEIGHT = 240;
@@ -34,6 +37,8 @@ function Frame({
   snapshot,
   snapshotDark,
   interactLabel = "Click to interact",
+  element,
+  offset = 0,
   width,
   height,
   minWidth = DEFAULT_MIN_WIDTH,
@@ -50,6 +55,7 @@ function Frame({
   const iframeRef = useRef(null);
   const canvas = useContext(CanvasContext);
   const navigationCleanupRef = useRef(null);
+  const frameScrollCleanupRef = useRef(null);
   const interactButtonRef = useRef(null);
   const restoreInteractFocusRef = useRef(false);
   const environment = getCanvasEnvironment();
@@ -79,6 +85,11 @@ function Frame({
   const [altHeld, setAltHeld] = useState(false);
   const [hoveringGuard, setHoveringGuard] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [captureStatus, setCaptureStatus] = useState("idle");
+  const [linkCopied, setLinkCopied] = useState(false);
+  const captureStatusTimeoutRef = useRef(null);
+  const linkCopiedTimeoutRef = useRef(null);
   const {
     loadStrategy: resolvedLoadStrategy,
     shouldMountIframe,
@@ -115,7 +126,15 @@ function Frame({
     }
   }, [interactive]);
 
-  useEffect(() => () => navigationCleanupRef.current?.(), []);
+  useEffect(
+    () => () => {
+      navigationCleanupRef.current?.();
+      frameScrollCleanupRef.current?.();
+      window.clearTimeout(captureStatusTimeoutRef.current);
+      window.clearTimeout(linkCopiedTimeoutRef.current);
+    },
+    []
+  );
 
   useEffect(() => {
     if (!hoveringGuard) return undefined;
@@ -144,8 +163,12 @@ function Frame({
         new window.ClipboardItem({ [blob.type]: blob }),
       ]);
       setCopied(true);
-    } catch {
-      // Clipboard copy failed; ignore silently.
+    } catch (error) {
+      console.error(
+        `Unable to copy Frame "${currentNavigation.title}" thumbnail:`,
+        error
+      );
+      setCopied(false);
     }
   }, [snapshot]);
 
@@ -158,6 +181,109 @@ function Frame({
     activate();
     setInteractive(true);
   }, [activate]);
+
+  const refreshFrame = useCallback(() => {
+    navigationCleanupRef.current?.();
+    setLoadedFrameSrc(null);
+    setNavigation(initialNavigation);
+    activate();
+    setReloadKey((key) => key + 1);
+  }, [activate, initialNavigation]);
+
+  const copyFrameLink = useCallback(async () => {
+    const frameId = blockId ?? id;
+    if (!frameId) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("tcFrame");
+    const queryIndex = url.hash.indexOf("?");
+    const hashPath =
+      queryIndex === -1 ? url.hash : url.hash.slice(0, queryIndex);
+    const hashParams = new URLSearchParams(
+      queryIndex === -1 ? "" : url.hash.slice(queryIndex + 1)
+    );
+    hashParams.set("tcFrame", frameId);
+    url.hash = `${hashPath || "#/"}?${hashParams.toString()}`;
+    try {
+      await writeClipboardText(url.href);
+      setLinkCopied(true);
+      window.clearTimeout(linkCopiedTimeoutRef.current);
+      linkCopiedTimeoutRef.current = window.setTimeout(
+        () => setLinkCopied(false),
+        1600
+      );
+    } catch {
+      setLinkCopied(false);
+    }
+  }, [blockId, id]);
+
+  const captureFrameToClipboard = useCallback(async () => {
+    const iframe = iframeRef.current;
+    if (
+      !navigator.clipboard?.write ||
+      !window.ClipboardItem ||
+      (showPoster ? !snapshot : !iframeLoaded)
+    ) {
+      setCaptureStatus("error");
+      return;
+    }
+
+    setCaptureStatus("capturing");
+    try {
+      let blob;
+      if (showPoster && snapshot) {
+        const prefersDark = window.matchMedia?.(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+        const visibleSnapshot =
+          prefersDark && snapshotDark ? snapshotDark : snapshot;
+        const response = await fetch(visibleSnapshot);
+        if (!response.ok) {
+          throw new Error("Unable to load the frame thumbnail.");
+        }
+        blob = await response.blob();
+      } else {
+        const frameWindow = iframe.contentWindow;
+        const frameDocument = iframe.contentDocument;
+        const width = iframe.clientWidth;
+        const height = iframe.clientHeight;
+        if (!frameWindow || !frameDocument || width === 0 || height === 0) {
+          throw new Error("Frame is not ready to capture.");
+        }
+        const { domToBlob } = await import("modern-screenshot");
+        blob = await domToBlob(frameDocument.documentElement, {
+          backgroundColor: null,
+          features: { restoreScrollPosition: true },
+          height,
+          scale: window.devicePixelRatio || 1,
+          timeout: 30_000,
+          width,
+          style: {
+            height: `${height}px`,
+            overflow: "hidden",
+            width: `${width}px`,
+          },
+        });
+      }
+      await navigator.clipboard.write([
+        new window.ClipboardItem({ [blob.type || "image/png"]: blob }),
+      ]);
+      setCaptureStatus("copied");
+      window.clearTimeout(captureStatusTimeoutRef.current);
+      captureStatusTimeoutRef.current = window.setTimeout(
+        () => setCaptureStatus("idle"),
+        1600
+      );
+    } catch (error) {
+      console.error(`Unable to capture Frame "${currentNavigation.title}":`, error);
+      setCaptureStatus("error");
+    }
+  }, [
+    currentNavigation.title,
+    iframeLoaded,
+    showPoster,
+    snapshot,
+    snapshotDark,
+  ]);
 
   const syncNavigation = () => {
     const iframe = iframeRef.current;
@@ -276,7 +402,8 @@ function Frame({
       : `Interact with ${currentNavigation.title}`;
 
   return (
-    <ResizableBlock
+    <>
+      <ResizableBlock
       {...blockProps}
       id={id}
       blockId={blockId}
@@ -308,36 +435,168 @@ function Frame({
             ) : null}
           </span>
           <span className="tc-frame-route">{currentNavigation.route}</span>
-          <a
-            className="tc-frame-open tc-no-drag"
-            href={currentNavigation.href}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`Open ${currentNavigation.title} in new tab`}
-            title="Open in new tab"
-          >
-            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-              <path
-                d="M9.5 2.5h4v4m0-4-6 6M7 4.5H3.5a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V9"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-              />
-            </svg>
-          </a>
+          <span className="tc-frame-actions">
+            <button
+              type="button"
+              className="tc-frame-action tc-no-drag"
+              onClick={copyFrameLink}
+              disabled={!blockId && !id}
+              aria-label={
+                linkCopied
+                  ? `Copied link to ${currentNavigation.title}`
+                  : `Copy link to ${currentNavigation.title}`
+              }
+              title={linkCopied ? "Link copied" : "Copy link to frame"}
+            >
+              {linkCopied ? (
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                  <path
+                    d="m3 8.5 3 3 7-7"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                  <rect
+                    x="5.5"
+                    y="5.5"
+                    width="8"
+                    height="8"
+                    rx="1"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <path
+                    d="M3.5 10.5h-1v-8h8v1"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              )}
+            </button>
+            <button
+              type="button"
+              className="tc-frame-action tc-no-drag"
+              onClick={refreshFrame}
+              aria-label={`Refresh ${currentNavigation.title}`}
+              title="Refresh frame"
+            >
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path
+                  d="M13.5 3v3.5H10M13 6.5A5.5 5.5 0 1 0 13.1 10"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="tc-frame-action tc-no-drag"
+              onClick={captureFrameToClipboard}
+              disabled={
+                (showPoster ? !snapshot : !iframeLoaded) ||
+                captureStatus === "capturing"
+              }
+              aria-label={
+                captureStatus === "copied"
+                  ? `Copied ${currentNavigation.title} frame`
+                  : captureStatus === "error"
+                  ? `Could not capture ${currentNavigation.title} frame`
+                  : `Capture ${currentNavigation.title} frame`
+              }
+              title={
+                showPoster
+                  ? "Copy thumbnail to clipboard"
+                  : captureStatus === "copied"
+                  ? "Copied to clipboard"
+                  : captureStatus === "error"
+                  ? "Capture failed"
+                  : "Capture frame to clipboard"
+              }
+            >
+              {captureStatus === "copied" ? (
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                  <path
+                    d="m3 8.5 3 3 7-7"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                  <path
+                    d="M5 4.5 6 3h4l1 1.5h1.5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1H5Zm3 6a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              )}
+            </button>
+            <a
+              className="tc-frame-action tc-no-drag"
+              href={currentNavigation.href}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Open ${currentNavigation.title} in new tab`}
+              title="Open in new tab"
+            >
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path
+                  d="M9.5 2.5h4v4m0-4-6 6M7 4.5H3.5a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V9"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                />
+              </svg>
+            </a>
+          </span>
         </div>
         <div className="tc-frame-viewport">
           {shouldMountIframe ? (
             <iframe
+              key={reloadKey}
               ref={iframeRef}
               className="tc-frame-document"
               src={iframeSrc}
               title={currentNavigation.title}
-              onLoad={() => {
+              onLoad={(event) => {
                 setLoadedFrameSrc(iframeSrc);
                 observeNavigation();
+                frameScrollCleanupRef.current?.();
+                frameScrollCleanupRef.current = null;
+                if (element) {
+                  const scroll = scrollFrameToElement(
+                    event.currentTarget,
+                    element,
+                    { offset }
+                  );
+                  if (scroll) {
+                    frameScrollCleanupRef.current = scroll.cancel;
+                  } else {
+                    console.warn(
+                      `Unable to scroll Frame "${currentNavigation.title}" to element "${element}".`
+                    );
+                  }
+                }
               }}
             />
           ) : null}
@@ -422,7 +681,16 @@ function Frame({
           ) : null}
         </div>
       </section>
-    </ResizableBlock>
+      </ResizableBlock>
+      {captureStatus === "copied"
+        ? createPortal(
+            <div className="tc-frame-capture-toast" role="status">
+              screenshot copied
+            </div>,
+            document.body
+          )
+        : null}
+    </>
   );
 }
 

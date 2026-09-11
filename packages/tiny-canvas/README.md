@@ -51,6 +51,32 @@ export function Board() {
 }
 ```
 
+Tiny Canvas also exports `Slides` as a parallel presentation surface:
+
+```jsx
+import { Slides } from "@dfosco/tiny-canvas";
+
+const deck = {
+  id: "review",
+  title: "Design review",
+  slides: [
+    {
+      title: "Open details",
+      description: "Restore an exact Statefully screen.",
+      url: "/prototype#view=overview",
+      steps: [
+        { type: "cursor", targetId: "view-toggle", scrollOffset: -16 },
+        { type: "click", url: "/prototype#view=details" },
+      ],
+    },
+  ],
+};
+
+export function Review() {
+  return <Slides deck={deck} />;
+}
+```
+
 ## Multiple canvas pages
 
 Each TSX route file owns one independent `<Canvas>`. The Vite plugin discovers
@@ -290,6 +316,8 @@ the current application:
 | `snapshot`                              | `string`                                | —                     | Browser-resolvable preview image. Required for `interaction`; used as a loading poster with `eager`.                                                                           |
 | `snapshotDark`                          | `string`                                | —                     | Optional dark-mode preview selected by the native `<picture>` element.                                                                                                         |
 | `interactLabel`                         | `ReactNode`                             | `'Click to interact'` | Visible interaction-gate button content. Its accessible name also includes the Frame title.                                                                                    |
+| `element`                               | `string`                                | —                     | ID of a same-origin element to reveal after the iframe first loads.                                                                                                            |
+| `offset`                                | `number`                                | `0`                   | Additional vertical scroll offset. Positive values scroll farther down; negative values retain more context above the target.                                                  |
 | `prepend`                               | `{ value, visible, env? }[]`            | —                     | Add ordered entries before the URL pathname.                                                                                                                                   |
 | `append`                                | `{ value, visible, external?, env? }[]` | —                     | Add ordered entries after the URL pathname. A leading `?` or `/?` adds query parameters without pathname encoding. `external: false` omits the entry from **Open in new tab**. |
 | `apend`                                 | object or array                         | —                     | Deprecated runtime alias for `append`.                                                                                                                                         |
@@ -330,6 +358,15 @@ Holding **Alt** while hovering a snapshot-backed guard swaps the button to
 **Copy to clipboard**; clicking it copies the snapshot image to the user's
 clipboard instead of activating the Frame, briefly confirming with
 **Copied!** before reverting once the pointer leaves the guard.
+The Frame header also provides refresh, copied deep-link, and capture actions.
+Dormant Frames copy their visible poster. Loaded same-origin Frames capture the
+current iframe viewport, including its current URL state and scroll position.
+Cross-origin live DOM capture is blocked by browser security.
+
+When `element` is set, Frame finds that ID after the iframe loads and performs
+a 900ms eased scroll with 24px of top context plus `offset`. The scroll runs
+once per mounted iframe, including after an interaction-gated Frame is first
+activated.
 
 ```jsx
 import settingsSnapshot from "./settings.png";
@@ -349,6 +386,75 @@ tinyCanvas({
   },
 });
 ```
+
+### `Slides`
+
+`Slides` is a top-level surface beside `Canvas`; it is not a Canvas child. It
+accepts a deck with base slide URLs and ordered intermediary steps:
+
+```js
+{
+  id: "review",
+  title: "Design review",
+  conclusion: "Finished.",
+  slides: [
+    {
+      title: "Review settings",
+      description: "Explain the exact state.",
+      url: "/prototype#view=overview",
+      displayUrl: "example.test/prototype",
+      steps: [
+        { type: "cursor", targetId: "settings", scrollOffset: -24 },
+        { type: "click", url: "/prototype#view=details&panel=open" },
+      ],
+      framePaddingPercent: 5,
+    },
+  ],
+}
+```
+
+`Slides` owns the base -> ordered steps -> next-slide state machine. Click
+steps replace the URL inside the mounted same-origin iframe and preserve its
+scroll position. Cursor steps use the same target and offset behavior as
+`Frame`. `Command+K` advances, `Command+Shift+K` skips remaining steps, and
+`Command+J` returns to the previous slide base. The conclusion keeps the final
+iframe mounted beneath a scrim.
+
+Use `slideIndex`, `stepIndex`, `onSlideChange`, and `onStepChange` to integrate
+with a host router. Slide indices are zero-based in component props; step
+indices are one-based. The package does not prescribe a canonical route.
+Statefully hashes, query parameters, and other host-owned URL state are
+preserved.
+
+Slides styles use neutral custom-property fallbacks such as `--background`,
+`--foreground`, `--card`, `--muted`, `--border`, `--accent`, `--ring`, and
+`--radius`. Hosts can override the corresponding `--tc-slides-*` properties
+directly.
+
+## Frame snapshots
+
+Install Playwright in the consuming repository, then run the package CLI:
+
+```bash
+npx playwright install chromium
+npx tiny-canvas-snap src/pages/canvas
+```
+
+The CLI starts the repository's `npm run dev` server unless `--base-url` is
+provided. It captures light and dark images by default, preserves complete
+stateful frame URLs, waits for the configured `element` and `offset`, writes
+deterministic files under `public/tiny-canvas/snapshots`, and adds
+`snapshot`/`snapshotDark` props to self-closing Frames.
+
+```bash
+tiny-canvas-snap src/pages/canvas/review.tsx --theme light
+tiny-canvas-snap src/pages/canvas --new
+tiny-canvas-snap src/pages/canvas --no-write --base-url http://127.0.0.1:5173/
+```
+
+Frame routes and capture metadata must be static JSX values or local constants.
+Unsupported dynamic expressions and missing target IDs fail explicitly instead
+of producing a screenshot of the wrong state.
 
 ### `Note` and `Mark`
 

@@ -1,6 +1,6 @@
 {
   "name": "@dfosco/tiny-canvas",
-  "version": "5.3.0",
+  "version": "5.5.0",
   "type": "module",
   "license": "MIT",
   "description": "A lightweight React canvas with draggable elements and persistent positions",
@@ -36,21 +36,32 @@
       "import": "./src/vite.js",
       "default": "./src/vite.js"
     },
+    "./snapshot": {
+      "types": "./src/snapshot.d.ts",
+      "import": "./src/snapshot.js",
+      "default": "./src/snapshot.js"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
     "access": "public"
   },
   "files": [
+    "bin",
     "dist",
     "src/index.d.ts",
     "src/pageRoute.js",
+    "src/snapshot.js",
+    "src/snapshot.d.ts",
     "src/vite.js",
     "src/vite.d.ts",
     "src/virtual.d.ts",
     "LICENSE",
     "README.md"
   ],
+  "bin": {
+    "tiny-canvas-snap": "./bin/tiny-canvas-snap.mjs"
+  },
   "sideEffects": [
     "**/*.css"
   ],
@@ -61,10 +72,18 @@
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "playwright": "^1.55.0 || ^1.63.0"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": true
+    }
   },
   "dependencies": {
+    "@babel/parser": "^7.29.0",
     "@neodrag/react": "^2.3.0",
+    "modern-screenshot": "^4.7.0",
     "react-markdown": "^10.1.0"
   },
   "devDependencies": {
@@ -72,6 +91,7 @@
     "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^4.3.4",
     "jsdom": "^30.0.1",
+    "playwright": "^1.63.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "vite": "^6.0.5",

@@ -7,10 +7,14 @@ export type Path =
   | `/`
   | `/canvas`
   | `/canvas/details`
+  | `/canvas/stateful`
   | `/site`
+  | `/slides`
+  | `/slides/:slideshowId`
+  | `/stateful`
 
 export type Params = {
-  
+  '/slides/:slideshowId': { slideshowId: string }
 }
 
 export type ModalPath = never

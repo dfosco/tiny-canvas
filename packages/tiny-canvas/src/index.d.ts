@@ -1,4 +1,5 @@
 import {
+  CSSProperties,
   HTMLAttributes,
   ImgHTMLAttributes,
   ReactElement,
@@ -119,6 +120,10 @@ export interface FrameProps extends Omit<BlockProps, "children"> {
   snapshotDark?: string;
   /** Interaction-gate button content. Default: 'Click to interact' */
   interactLabel?: ReactNode;
+  /** ID of a same-origin element to reveal after the iframe first loads. */
+  element?: string;
+  /** Additional vertical scroll offset in pixels. Default: 0 */
+  offset?: number;
   /** Ordered entries added before the iframe URL pathname. */
   prepend?: readonly FramePathAffix[];
   /** Ordered entries added after the iframe URL pathname. */
@@ -138,6 +143,114 @@ export interface FrameProps extends Omit<BlockProps, "children"> {
 }
 
 export declare function Frame(props: FrameProps): ReactElement;
+
+export interface SlidesCursorStep {
+  type: "cursor";
+  targetId: string;
+  scrollOffset?: number;
+}
+
+export interface SlidesClickStep {
+  type: "click";
+  url: string;
+}
+
+export type SlidesStep = SlidesCursorStep | SlidesClickStep;
+
+export interface SlideDefinition {
+  title: string;
+  description: string;
+  url: string;
+  displayUrl?: string;
+  steps?: readonly SlidesStep[];
+  framePaddingPercent?: number;
+}
+
+export interface SlidesDeck {
+  id: string;
+  title?: string;
+  conclusion?: string;
+  conclusionTitle?: string;
+  slides: readonly SlideDefinition[];
+}
+
+export interface ResolvedSlidesState {
+  count: number;
+  conclusion: boolean;
+  contentSlideIndex: number;
+  slideIndex: number;
+  slide: SlideDefinition;
+  steps: readonly SlidesStep[];
+  stepIndex?: number;
+  activeStep?: SlidesStep;
+  url: string;
+}
+
+export interface SlidesNavigationState {
+  slideIndex: number;
+  stepIndex?: number;
+}
+
+export interface SlidesProps {
+  deck: SlidesDeck;
+  /** Controlled zero-based slide index. */
+  slideIndex?: number;
+  /** Controlled one-based intermediary step index. */
+  stepIndex?: number;
+  /** Initial zero-based slide index for uncontrolled use. Default: 0 */
+  defaultSlideIndex?: number;
+  /** Initial one-based intermediary step index for uncontrolled use. */
+  defaultStepIndex?: number;
+  onSlideChange?: (slideIndex: number) => void;
+  onStepChange?: (stepIndex?: number) => void;
+  /** Controlled cursor and click step visibility. */
+  stepsEnabled?: boolean;
+  /** Initial step visibility for uncontrolled use. Default: true */
+  defaultStepsEnabled?: boolean;
+  onStepsEnabledChange?: (enabled: boolean) => void;
+  className?: string;
+  style?: CSSProperties;
+}
+
+export declare function Slides(props: SlidesProps): ReactElement;
+
+export declare function normalizeSlidesIndex(
+  value: unknown,
+  count: number
+): number;
+export declare function normalizeSlidesStep(
+  value: unknown,
+  stepCount: number
+): number | undefined;
+export declare function slidesCount(deck: SlidesDeck): number;
+export declare function resolveSlidesState(
+  deck: SlidesDeck,
+  slideIndex?: number,
+  stepIndex?: number
+): ResolvedSlidesState;
+export declare function nextSlidesState(
+  deck: SlidesDeck,
+  slideIndex: number,
+  stepIndex?: number,
+  stepsEnabled?: boolean
+): SlidesNavigationState;
+export declare function previousSlidesState(
+  deck: SlidesDeck,
+  slideIndex: number
+): SlidesNavigationState;
+export declare function buildSlidesFrameHref(
+  url: string,
+  currentHref?: string
+): string;
+export declare function buildSlidesOpenHref(
+  url: string,
+  currentHref?: string
+): string;
+export declare function buildSlidesDisplayRoute(
+  slide: SlideDefinition,
+  activeUrl: string,
+  currentHref?: string
+): string;
 
 export type NoteColor =
   | "yellow"

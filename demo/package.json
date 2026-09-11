@@ -7,9 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "snap": "node ../packages/tiny-canvas/bin/tiny-canvas-snap.mjs src/pages/canvas/stateful.tsx"
   },
   "dependencies": {
+    "@dfosco/statefully": "^0.1.0",
     "@dfosco/tiny-canvas": "*",
     "@generouted/react-router": "^1.19.10",
     "react": "^18.3.1",

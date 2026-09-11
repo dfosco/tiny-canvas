@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import 'virtual:prototype-data'
 import './css/reset.css'
 import './css/globals.css'
 import { routes } from '@generouted/react-router'

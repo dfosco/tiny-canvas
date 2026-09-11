@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import generouted from '@generouted/react-router/plugin'
 import mdx from '@mdx-js/rollup'
 import tinyCanvas from '@dfosco/tiny-canvas/vite'
+import prototypeData from '@dfosco/statefully/vite-plugin'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({ 
@@ -23,7 +24,11 @@ export default defineConfig({
       }
     ]
   },
+  optimizeDeps: {
+    exclude: ['@dfosco/statefully'],
+  },
   plugins: [
+    prototypeData(),
     react(),
     mdx(),
     tinyCanvas({

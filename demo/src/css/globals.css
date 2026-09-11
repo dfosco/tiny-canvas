@@ -338,6 +338,173 @@ button.lowland-button {
   border: 0;
 }
 
+/* Statefully and Slides demo */
+
+.stateful-demo {
+  --background: #fafafa;
+  --foreground: #18181b;
+  --card: #fff;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --border: #e4e4e7;
+  --accent: #18181b;
+  --accent-foreground: #fafafa;
+  --ring: #a1a1aa;
+  --radius: 8px;
+  min-height: 100vh;
+  padding: 64px;
+  color: var(--foreground);
+  background: var(--background);
+}
+
+@media (prefers-color-scheme: dark) {
+  .stateful-demo {
+    --background: #09090b;
+    --foreground: #fafafa;
+    --card: #18181b;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+    --border: #3f3f46;
+    --accent: #fafafa;
+    --accent-foreground: #18181b;
+    --ring: #d4d4d8;
+  }
+}
+
+.stateful-demo-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  max-width: 1080px;
+  margin: 0 auto 32px;
+}
+
+.stateful-demo-header span {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stateful-demo-header h1 {
+  margin: 6px 0;
+  font-size: clamp(32px, 5vw, 54px);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.stateful-demo-header p,
+.stateful-demo article p,
+.stateful-demo-activity p {
+  color: var(--muted-foreground);
+}
+
+.stateful-demo-header p {
+  margin: 0;
+}
+
+.stateful-demo-actions {
+  display: inline-flex;
+  padding: 3px;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.stateful-demo button {
+  min-height: 34px;
+  padding: 0 12px;
+  color: var(--foreground);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: calc(var(--radius) - 3px);
+}
+
+.stateful-demo button[data-active],
+.stateful-demo-activity > button {
+  color: var(--accent-foreground);
+  background: var(--accent);
+}
+
+.stateful-demo button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.stateful-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.stateful-demo article,
+.stateful-demo-activity {
+  padding: 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+}
+
+.stateful-demo article > div,
+.stateful-demo-activity {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.stateful-demo article h2,
+.stateful-demo-activity h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.stateful-demo article p,
+.stateful-demo-activity p {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
+.stateful-demo article small {
+  display: block;
+  margin-top: 20px;
+  color: var(--muted-foreground);
+}
+
+.stateful-demo-activity {
+  flex-wrap: wrap;
+  max-width: 1080px;
+  margin: 20px auto 0;
+}
+
+.stateful-demo-activity ol {
+  flex-basis: 100%;
+  padding: 16px 0 0 20px;
+  margin: 8px 0 0;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 760px) {
+  .stateful-demo {
+    padding: 32px 20px;
+  }
+
+  .stateful-demo-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stateful-demo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .lowland-field {
   display: grid;
   gap: 6px;

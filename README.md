@@ -1,8 +1,8 @@
 # Tiny Canvas
 
-A small React canvas for arranging interactive blocks. Tiny Canvas gives every
-block a stable generated identity, persists dragged positions in localStorage,
-and keeps movement and selection behavior inside a reusable `<Block>`.
+Reusable React surfaces for arranging interface work and presenting it. `Canvas`
+provides draggable boards with persistent layout; `Slides` presents exact
+stateful screens through ordered cursor and click steps.
 
 [View the live demo](https://dfosco.github.io/tiny-canvas/)
 
@@ -15,7 +15,7 @@ npm install @dfosco/tiny-canvas
 ## Quick start
 
 ```jsx
-import { Block, Canvas } from '@dfosco/tiny-canvas'
+import { Block, Canvas, Slides } from '@dfosco/tiny-canvas'
 import '@dfosco/tiny-canvas/style.css'
 
 export function Board() {
@@ -37,6 +37,23 @@ export function Board() {
 content and `Frame` for same-origin route previews; passing a plain element
 produces a clear runtime error.
 
+`Slides` is a separate top-level surface, not a Canvas widget:
+
+```jsx
+<Slides
+  deck={{
+    id: 'review',
+    slides: [
+      {
+        title: 'Details',
+        description: 'Open a shareable Statefully state.',
+        url: '/stateful#view=details',
+      },
+    ],
+  }}
+/>
+```
+
 ## How it works
 
 - **No explicit IDs required.** `Canvas` tags each `Block` with a generated
@@ -51,6 +68,10 @@ produces a clear runtime error.
   canvas background or pressing Escape clears selection.
 - **Same-origin previews.** `Frame` accepts relative paths, query strings,
   hash routes, or same-origin absolute URLs and adds `embedView=1`.
+- **Exact presentations.** `Slides` preserves complete stateful URLs and
+  supports ordered cursor/click steps with shareable host routing.
+- **Targeted snapshots.** `Frame` element/offset props and
+  `tiny-canvas-snap` align live and generated views to the same content.
 - **Stable across content edits.** Generated IDs use a React key when supplied,
   otherwise the block structure and sibling position.
 

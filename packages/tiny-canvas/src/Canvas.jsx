@@ -164,6 +164,50 @@ function Canvas({
     return () => canvas.removeEventListener('wheel', handleWheelZoom);
   }, [zoomByWheel]);
 
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const hashQueryIndex = url.hash.indexOf("?");
+    const hashParams = new URLSearchParams(
+      hashQueryIndex === -1 ? "" : url.hash.slice(hashQueryIndex + 1)
+    );
+    const frameId =
+      hashParams.get("tcFrame") || url.searchParams.get("tcFrame");
+    const canvas = canvasRef.current;
+    if (!frameId || !canvas) {
+      return undefined;
+    }
+
+    let timeout;
+    let attempts = 0;
+    const centerTarget = () => {
+      const target = [...canvas.querySelectorAll("[data-block-id]")].find(
+        (element) =>
+          element.dataset.blockId === frameId || element.id === frameId
+      );
+      if (target) {
+        target.scrollIntoView({
+          behavior: "auto",
+          block: "center",
+          inline: "center",
+        });
+        target.focus({ preventScroll: true });
+        const rect = target.getBoundingClientRect();
+        const horizontallyCentered =
+          Math.abs(rect.left + rect.width / 2 - window.innerWidth / 2) < 2;
+        const verticallyCentered =
+          Math.abs(rect.top + rect.height / 2 - window.innerHeight / 2) < 2;
+        if (horizontallyCentered && verticallyCentered) return;
+      }
+      attempts += 1;
+      if (attempts < 40) {
+        timeout = window.setTimeout(centerTarget, 100);
+      }
+    };
+    timeout = window.setTimeout(centerTarget, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [pageId]);
+
   const contextValue = useMemo(
     () => ({
       selectedBlockId,

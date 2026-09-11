@@ -12,6 +12,11 @@ import {
 } from "@testing-library/react";
 import Canvas from "./Canvas.jsx";
 import Frame from "./Frame.jsx";
+import { domToBlob } from "modern-screenshot";
+
+vi.mock("modern-screenshot", () => ({
+  domToBlob: vi.fn(),
+}));
 
 function setPageManifest(widgets = {}) {
   const script = document.createElement("script");
@@ -29,6 +34,18 @@ describe("Frame load strategies", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.restoreAllMocks();
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        write: vi.fn().mockResolvedValue(undefined),
+        writeText: vi.fn().mockResolvedValue(undefined),
+      },
+    });
+    window.ClipboardItem = class ClipboardItem {
+      constructor(data) {
+        this.data = data;
+      }
+    };
   });
 
   afterEach(() => {
@@ -207,5 +224,143 @@ describe("Frame load strategies", () => {
     fireEvent.error(container.querySelector('img[src="/gated.png"]'));
     expect(screen.getByText("Preview unavailable")).toBeTruthy();
     expect(container.querySelector('iframe[title="Gated"]')).toBeNull();
+  });
+
+  it("copies the visible thumbnail while a snapshot-backed Frame is dormant", async () => {
+    const blob = new Blob(["thumbnail"], { type: "image/png" });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, blob: async () => blob })
+    );
+
+    render(
+      <Canvas>
+        <Frame
+          route="/settings"
+          title="Settings"
+          snapshot="/settings.png"
+        />
+      </Canvas>
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Capture Settings frame" })
+    );
+
+    await waitFor(() =>
+      expect(navigator.clipboard.write).toHaveBeenCalledOnce()
+    );
+    expect(screen.getByRole("status").textContent).toBe("screenshot copied");
+    expect(fetch).toHaveBeenCalledWith("/settings.png");
+    expect(domToBlob).not.toHaveBeenCalled();
+  });
+
+  it("copies a board link that focuses the current Frame", async () => {
+    window.history.replaceState({}, "", "/board");
+    render(
+      <Canvas>
+        <Frame id="settings" route="/settings" title="Settings" />
+      </Canvas>
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Copy link to Settings" })
+    );
+
+    await waitFor(() =>
+      expect(navigator.clipboard.writeText).toHaveBeenCalledOnce()
+    );
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      "http://localhost:3000/board#/?tcFrame=settings"
+    );
+  });
+
+  it("focuses a Frame addressed by a copied board link", async () => {
+    window.history.replaceState({}, "", "/board#/canvas?tcFrame=settings");
+    const scrollIntoView = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+
+    render(
+      <Canvas>
+        <Frame id="settings" route="/settings" title="Settings" />
+      </Canvas>
+    );
+
+    await waitFor(() =>
+      expect(document.getElementById("settings")).toBe(document.activeElement)
+    );
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: "auto",
+      block: "center",
+      inline: "center",
+    });
+  });
+
+  it("captures the iframe viewport without using browser screen capture", async () => {
+    const blob = new Blob(["frame"], { type: "image/png" });
+    domToBlob.mockResolvedValue(blob);
+    const { container } = render(
+      <Canvas>
+        <Frame route="/settings" title="Settings" />
+      </Canvas>
+    );
+    const iframe = container.querySelector("iframe");
+    Object.defineProperties(iframe, {
+      clientWidth: { configurable: true, value: 640 },
+      clientHeight: { configurable: true, value: 360 },
+    });
+    fireEvent.load(iframe);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Capture Settings frame" })
+    );
+
+    await waitFor(() => expect(domToBlob).toHaveBeenCalledOnce());
+    expect(domToBlob).toHaveBeenCalledWith(
+      iframe.contentDocument.documentElement,
+      expect.objectContaining({
+        width: 640,
+        height: 360,
+        features: { restoreScrollPosition: true },
+      })
+    );
+    expect(navigator.clipboard.write).toHaveBeenCalledOnce();
+    expect(navigator.mediaDevices?.getDisplayMedia).toBeUndefined();
+  });
+
+  it("scrolls a loaded Frame to its configured element and offset", async () => {
+    const { container } = render(
+      <Canvas>
+        <Frame
+          route="/settings"
+          title="Settings"
+          element="advanced-settings"
+          offset={24}
+        />
+      </Canvas>
+    );
+    const iframe = container.querySelector("iframe");
+    iframe.contentDocument.open();
+    iframe.contentDocument.write("<!doctype html><html><body></body></html>");
+    iframe.contentDocument.close();
+    const target = iframe.contentDocument.createElement("div");
+    target.id = "advanced-settings";
+    target.getBoundingClientRect = () => ({ top: 300 });
+    iframe.contentDocument.body.append(target);
+    Object.defineProperty(iframe.contentWindow, "scrollY", {
+      configurable: true,
+      value: 100,
+    });
+    iframe.contentWindow.scrollTo = vi.fn();
+    iframe.contentWindow.requestAnimationFrame = (callback) => {
+      callback(iframe.contentWindow.performance.now() + 1000);
+      return 1;
+    };
+
+    fireEvent.load(iframe);
+
+    expect(iframe.contentWindow.scrollTo).toHaveBeenLastCalledWith({
+      top: 400,
+    });
   });
 });
