@@ -22,11 +22,11 @@ All three schemas use JSON Schema Draft 2020-12 and have independent version num
 A canonical JSONL document starts with a versioned, fully materialized `canvas_created` event and may be followed by subsequent events:
 
 ```jsonl
-{"event":"canvas_created","formatVersion":1,"documentId":"research","title":"Research","widgets":[{"id":"note-1","type":"sticky-note","position":{"x":48,"y":80},"props":{"text":"Review the navigation","color":"yellow","width":270,"height":170}}],"connectors":[]}
+{"event":"canvas_created","formatVersion":1,"documentId":"research","title":"Research","widgets":[{"id":"note-1","type":"note","originType":"sticky-note","position":{"x":48,"y":80},"props":{"markdown":"Review the navigation","color":"yellow","width":270,"height":170}}],"connectors":[]}
 {"event":"widget_moved","widgetId":"note-1","position":{"x":64,"y":96}}
 ```
 
-Exporters SHOULD compact private histories into one initial `canvas_created` record containing the current state. Newly authored changes then append deterministic, validated events. This contract preserves Hypercanvas's existing event vocabulary, but it is **not** a promise to export machine-local session state or complete private history.
+Exporters SHOULD compact private histories into one initial `canvas_created` record containing the current state. Newly authored changes then append deterministic, validated events. The **event vocabulary** matches Hypercanvas v1, but exported widget `type` values MUST be normalized to the portable enum (`note`, `frame`, `agent`, etc.); a producer-specific type can be recorded as informational `originType`. Private widget props are mapped to public, type-specific props before writing. This is **not** a promise to export machine-local session state or full private history.
 
 A static projection of that document is a **different generated artifact**, for example:
 
@@ -62,7 +62,7 @@ MDX remains a normal React composition format, not an export intermediate for JS
 
 ## The canonical presentation contract
 
-A compiler produces exactly **one presentation widget for every exported source widget**, preserving stable IDs, geometry, ordering, connector endpoints, relevant accessible text, and navigational links. No widget may silently disappear because its interactive runtime is missing.
+On **every local or CI production build**, Tiny Canvas re-materializes the editable portable JSONL and generates exactly **one presentation widget for every source widget**. This preserves stable IDs, geometry, ordering, connector endpoints, accessible text, and navigational links. A teammate's JSONL edits immediately affect the next static build: no stale export-time presentation and no Hypercanvas dependency. No widget may silently disappear because its interactive runtime is missing.
 
 Public content variants v1:
 
@@ -70,7 +70,7 @@ Public content variants v1:
 - `component`, `gallery`, `controls`, `prompt`, `terminal`, `agent`
 - `redacted` and `unavailable` — intentional **visible** results with a public-safe reason, never blank placeholders
 
-The mapping from a producer's widget type into one of these variants belongs to the producer, not Tiny Canvas. For example, Hypercanvas maps agent chat to an inert summary/transcript card; a custom widget must supply a registered projector or explicitly render a visible unavailable/redacted descriptor. Tiny Canvas owns rendering the **portable variants**.
+The producer maps each private widget to a **portable source widget type and props**. For example, Hypercanvas exports an `agent-chat` widget as a public `agent` type with safe title/summary, or as `redacted`. Tiny Canvas then materializes and projects **portable types** into read-only variants using public adapters. A custom widget must export a supported portable type (often `component`) with an independently distributable renderer, or an explicit `unavailable`/`redacted` representation. No Hypercanvas projector is needed when a teammate rebuilds.
 
 `readOnly: true` means source editing, dragging/resizing persistence, remote sessions, agent execution, filesystem mutation, and terminal processes are disabled. A `frame` may still point to an interactive, bundled **prototype**; that interaction must not mutate the exported document.
 
@@ -105,15 +105,19 @@ const state = materializeCanvasEvents(parseCanvasJsonl(source))
 import { Canvas, Note, Frame, DocumentCanvas, PublishedCanvas } from '@dfosco/tiny-canvas'
 ```
 
-The `./document` subpath must be browser/Node-safe and React-free. The three schema files are copied from their repository-root source into the published npm package by `scripts/sync-schemas.mjs`, then exposed as `@dfosco/tiny-canvas/schema/events/v1`, `/schema/presentation/v1`, and `/schema/publication/v1`. The JSONL materializer must match the known Hypercanvas reducer events in v1, including connectors, waypoints, updates, inverse/undo forward-events and compaction semantics. Move or independently port the reducer behind contract/parity tests, then eliminate competing definitions.
+The `./document` subpath must be browser/Node-safe and React-free, and should expose `compileReadOnlyPresentation(state, { assets, source })` for regeneration directly from portable source. The three schema files are copied from their repository-root source into the published npm package by `scripts/sync-schemas.mjs`, then exposed as `@dfosco/tiny-canvas/schema/events/v1`, `/schema/presentation/v1`, and `/schema/publication/v1`. The JSONL materializer must match the known Hypercanvas reducer events in v1, including connectors, waypoints, updates, inverse/undo forward-events and compaction semantics. Move or independently port the reducer behind contract/parity tests, then eliminate competing definitions.
 
 For editable JSONL in local development, emit validated operations to an authenticated/local-only writer, with optimistic version checks and atomic append. Browser-only/static publication **cannot** persist into source; do not imply that browser edits synchronize to Git. The existing MDX path keeps its localStorage persistence contract.
+
+## Source-to-projection freshness
+
+The normalized `.canvas.jsonl` is the **only editable canvas source** in the handoff. The producer exports its content as public portable widget types and may provide initial `.presentation.json` files for review, but the consumer's `npm run build` MUST regenerate their contents from the current JSONL and public assets. If a widget cannot be rebuilt without Hypercanvas, the producer must embed its safe canonical static state into the portable widget props (or export a redacted/unavailable descriptor). The build verifies the projection's SHA-256 source digest; stale precomputed presentations never reach the published web.
 
 ## Packaging and compatibility
 
 - Add JSONL parsing, schema validation, materialization, and event serialization to an opt-in `@dfosco/tiny-canvas/document` subpath.
 - Expose both versioned schema files as package assets; use semantic versioning plus an explicit formatVersion gate for breaking changes.
-- Add an explicit `widgetAdapters` / `projectors` extension contract. Read-only representation is mandatory for every built-in widget and every registered custom widget that is exported.
+- Add a public portable-type-to-presentation renderer/compiler registry. Read-only representation is mandatory for every portable widget. Producers must normalize custom/private widgets into a portable type and provide any external component implementation in the handoff repository.
 - Add TS declarations, example MDX + JSONL side by side, upgrade documentation, fixture documents, Node/browser parity tests, and a standalone Vite build test.
 - Source provenance in a presentation is either `jsonl` or `mdx`; an MDX-native compiler may produce the same read-only projection in the future without adopting JSONL.
 
