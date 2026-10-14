@@ -41,7 +41,10 @@
       "import": "./src/snapshot.js",
       "default": "./src/snapshot.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./schema/events/v1": "./schemas/canvas-events.v1.schema.json",
+    "./schema/presentation/v1": "./schemas/canvas-presentation.v1.schema.json",
+    "./schema/publication/v1": "./schemas/canvas-publication.v1.schema.json"
   },
   "publishConfig": {
     "access": "public"
@@ -57,7 +60,8 @@
     "src/vite.d.ts",
     "src/virtual.d.ts",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "schemas"
   ],
   "bin": {
     "tiny-canvas-snap": "./bin/tiny-canvas-snap.mjs"
@@ -66,7 +70,7 @@
     "**/*.css"
   ],
   "scripts": {
-    "build": "vite build",
+    "build": "vite build && node ../../scripts/sync-schemas.mjs",
     "prepack": "npm run build",
     "test": "vitest run"
   },
