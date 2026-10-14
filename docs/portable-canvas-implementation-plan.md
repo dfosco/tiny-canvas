@@ -8,9 +8,9 @@
 Tiny Canvas has **two peer-level authored inputs**, not one translated into the other:
 
 1. **MDX/TSX authoring**, unchanged. A developer hand-writes `<Canvas>`, `<Frame>`, `<Note>`, etc. and freely composes React UI. Tiny Canvas remains useful without Hypercanvas or JSONL. Its existing localStorage geometry behavior remains the default.
-2. **Portable JSONL document authoring**, added. An optional materializer replays a versioned event stream and renders the result through the *same visual primitives*. In development, canvas gestures and agent commands can append source events instead of writing localStorage.
+2. **Portable JSONL document authoring**, added. A producer first maps its private widget types to public portable types (`note`, `frame`, `agent`, `redacted`, etc.). The Tiny Canvas materializer replays that versioned event stream and renders it through the *same visual primitives*. In development, canvas gestures and agent commands can append source events instead of writing localStorage.
 
-A **third, derived and immutable surface** is the canonical read-only presentation used by static compilation. A web publication must render all widgets, even source widgets whose live/editing implementation is unavailable. It may contain inert snapshots, transcripts, metadata cards, or explicit redaction notices. Do not serialize arbitrary JSX into JSONL or generate MDX merely to show Hypercanvas content.
+A **third, derived and immutable surface** is the canonical read-only presentation **regenerated from editable JSONL on every build** by Tiny Canvas, not cached as an export-time snapshot. A web publication must render all widgets, even source widgets whose live/editing implementation is unavailable. It may contain inert snapshots, transcripts, metadata cards, or explicit redaction notices. Do not serialize arbitrary JSX into JSONL or generate MDX merely to show Hypercanvas content.
 
 ## Implementation sequence
 
@@ -34,6 +34,7 @@ validateCanvasStream(events: readonly unknown[]): ValidationResult
 materializeCanvasEvents(events: readonly CanvasEvent[]): PortableCanvasState
 applyCanvasEvent(state: PortableCanvasState, event: CanvasEvent): PortableCanvasState
 serializeCanvasEvent(event: CanvasEvent): string
+compileReadOnlyPresentation(state: PortableCanvasState, options: PublicAssetContext): CanvasPresentation
 validateCanvasPresentation(presentation: unknown): ValidationResult
 validatePublicationInventory(manifest: unknown): ValidationResult
 ```
@@ -41,7 +42,7 @@ validatePublicationInventory(manifest: unknown): ValidationResult
 - Adopt the upstream Hypercanvas reducer's semantics for initial state, props patches, move/remove, compaction/replacement, settings, sources, connectors, waypoints, and undo/redo-as-forward-events. Test equality for the same event sequence and recovery from corrupted lines.
 - **No React, Vite, Node filesystem APIs, Hypercanvas private code, or server dependency** in this subpath. Browser, Node, and worker consumers can call it directly.
 - Define reliable error policy: a malformed JSONL line must be reported with its line/offset, not silently transformed into a partially correct published board.
-- Define stable IDs across compaction, HMR, page rename, connector links and export/import. Never derive document widget IDs from React array indices.
+- Define stable IDs across compaction, HMR, page rename, connector links and export/import. Portable event records use normalized Tiny Canvas widget types; only their reducer mechanics match raw Hypercanvas events. Never derive document widget IDs from React array indices.
 - Reserve default widget geometry and origin normalization logic in the projection/renderer adapters; do not accidentally overwrite signed coordinates.
 
 **Exit:** identical materialized state and validation results for shared reducer fixtures, including all connectors and undo/redo operations.
@@ -92,15 +93,15 @@ The current `packages/tiny-canvas/src/vite.js` only indexes static `.tsx` page f
 
 **Exit:** one teammate can locally drag a widget or ask an agent to edit it, observe the JSONL diff, commit, and rebuild with no Hypercanvas.
 
-### T5 — Canonical projections, extensibility and generated agent guidance
+### T5 — Canonical projections rebuilt offline, extensibility and generated agent guidance
 
-- Implement a source-type-to-canonical-kind projection registry. Each mapping is explicit and tested; registered custom types provide a projection function and static renderer or intentionally public-safe redacted/unavailable result. Do not silently omit unknown types.
+- Implement a **portable widget type**-to-canonical-presentation registry. Rebuild projection JSON from the current document on **every** production build; do not trust precomputed export-time projections after a teammate edits the JSONL. Each portable type is explicitly supported and tested; registered custom components must ship source/renderer in the project or normalize to a safe canonical variant. Never omit unknown types.
 - Provide a `PublishedCanvas` static read-only renderer with no editable Core endpoint dependencies; schema validation ensures content variants are allowlisted, but additional URL/privacy policy is enforced at build.
 - Build `AGENTS.md` from the **actual** `canvas-publication` inventory: project layout, pages, routes, widget classes used with counts/props, custom components, static projection variants, artifacts/assets, editing commands, limitations and source/generated ownership.
 - Store the canonical agent-guide template in Tiny Canvas, parameterize from the manifest, and let producer tools supply their widget-specific editable field descriptions. The resulting document must be valid standalone, with no references to unpublished Hypercanvas APIs.
 - Add golden snapshots and accessibility tests for every static variant, a source/projection ID-bijection verifier, privacy leak tests and multi-page rebuild tests.
 
-**Exit:** a newcomer can clone the published Git repo, read its AGENTS.md, modify a JSONL canvas/prototype/MDX page with an agent, run tests, and ship a static site.
+**Exit:** a newcomer can clone the published Git repo, read its AGENTS.md, modify a JSONL canvas/prototype/MDX page with an agent, run tests, and ship a static site **whose projection reflects the new JSONL content**, without running Hypercanvas.
 
 ## Proposed implementation touchpoints
 
