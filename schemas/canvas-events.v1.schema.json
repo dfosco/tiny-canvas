@@ -1,0 +1,695 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/dfosco/tiny-canvas/main/schemas/canvas-events.v1.schema.json",
+  "title": "Tiny Canvas portable JSONL event record v1",
+  "description": "Schema for ONE line/object of an append-only .canvas.jsonl stream. The first line MUST be canvas_created; sequence and referential constraints are enforced by the materializer, not JSON Schema. Published exports normalize the first line to include formatVersion 1. Extra event/widget fields are retained for round-trip but exporters MUST filter private data before publication.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/canvas_created"
+    },
+    {
+      "$ref": "#/$defs/widget_added"
+    },
+    {
+      "$ref": "#/$defs/widget_updated"
+    },
+    {
+      "$ref": "#/$defs/widget_moved"
+    },
+    {
+      "$ref": "#/$defs/widget_removed"
+    },
+    {
+      "$ref": "#/$defs/widgets_replaced"
+    },
+    {
+      "$ref": "#/$defs/settings_updated"
+    },
+    {
+      "$ref": "#/$defs/source_updated"
+    },
+    {
+      "$ref": "#/$defs/connector_added"
+    },
+    {
+      "$ref": "#/$defs/connector_removed"
+    },
+    {
+      "$ref": "#/$defs/connectors_replaced"
+    },
+    {
+      "$ref": "#/$defs/connector_updated"
+    },
+    {
+      "$ref": "#/$defs/connector_waypoints_set"
+    },
+    {
+      "$ref": "#/$defs/connector_waypoints_cleared"
+    }
+  ],
+  "$defs": {
+    "widget": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "position"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "type": "object",
+          "required": [
+            "x",
+            "y"
+          ],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        },
+        "props": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "connectorIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "connector": {
+      "type": "object",
+      "required": [
+        "id",
+        "start",
+        "end"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start": {
+          "type": "object",
+          "required": [
+            "widgetId"
+          ],
+          "properties": {
+            "widgetId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        "end": {
+          "type": "object",
+          "required": [
+            "widgetId"
+          ],
+          "properties": {
+            "widgetId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        "label": {
+          "type": "string"
+        },
+        "style": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "waypoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "x",
+              "y"
+            ],
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "canvas_created": {
+      "type": "object",
+      "required": [
+        "event",
+        "formatVersion",
+        "documentId",
+        "title",
+        "widgets"
+      ],
+      "properties": {
+        "event": {
+          "const": "canvas_created"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "formatVersion": {
+          "const": 1
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "widgets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/widget"
+          }
+        },
+        "connectors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/connector"
+          }
+        },
+        "sources": {
+          "type": "array",
+          "items": {}
+        },
+        "settings": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "widget_added": {
+      "type": "object",
+      "required": [
+        "event",
+        "widget"
+      ],
+      "properties": {
+        "event": {
+          "const": "widget_added"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "widget": {
+          "$ref": "#/$defs/widget"
+        }
+      },
+      "additionalProperties": true
+    },
+    "widget_updated": {
+      "type": "object",
+      "required": [
+        "event",
+        "widgetId",
+        "props"
+      ],
+      "properties": {
+        "event": {
+          "const": "widget_updated"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "widgetId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "props": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "widget_moved": {
+      "type": "object",
+      "required": [
+        "event",
+        "widgetId",
+        "position"
+      ],
+      "properties": {
+        "event": {
+          "const": "widget_moved"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "widgetId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "type": "object",
+          "required": [
+            "x",
+            "y"
+          ],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": true
+    },
+    "widget_removed": {
+      "type": "object",
+      "required": [
+        "event"
+      ],
+      "properties": {
+        "event": {
+          "const": "widget_removed"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "widgetId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "widget": {
+          "$ref": "#/$defs/widget"
+        }
+      },
+      "additionalProperties": true,
+      "anyOf": [
+        {
+          "required": [
+            "widgetId"
+          ]
+        },
+        {
+          "required": [
+            "widget"
+          ]
+        }
+      ]
+    },
+    "widgets_replaced": {
+      "type": "object",
+      "required": [
+        "event",
+        "widgets"
+      ],
+      "properties": {
+        "event": {
+          "const": "widgets_replaced"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "widgets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/widget"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "settings_updated": {
+      "type": "object",
+      "required": [
+        "event",
+        "settings"
+      ],
+      "properties": {
+        "event": {
+          "const": "settings_updated"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "settings": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "source_updated": {
+      "type": "object",
+      "required": [
+        "event",
+        "sources"
+      ],
+      "properties": {
+        "event": {
+          "const": "source_updated"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "sources": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "additionalProperties": true
+    },
+    "connector_added": {
+      "type": "object",
+      "required": [
+        "event",
+        "connector"
+      ],
+      "properties": {
+        "event": {
+          "const": "connector_added"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "connector": {
+          "$ref": "#/$defs/connector"
+        }
+      },
+      "additionalProperties": true
+    },
+    "connector_removed": {
+      "type": "object",
+      "required": [
+        "event"
+      ],
+      "properties": {
+        "event": {
+          "const": "connector_removed"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "connectorId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "connector": {
+          "$ref": "#/$defs/connector"
+        }
+      },
+      "additionalProperties": true,
+      "anyOf": [
+        {
+          "required": [
+            "connectorId"
+          ]
+        },
+        {
+          "required": [
+            "connector"
+          ]
+        }
+      ]
+    },
+    "connectors_replaced": {
+      "type": "object",
+      "required": [
+        "event"
+      ],
+      "properties": {
+        "event": {
+          "const": "connectors_replaced"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "connectors": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/connector"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "connector_updated": {
+      "type": "object",
+      "required": [
+        "event",
+        "connectorId"
+      ],
+      "properties": {
+        "event": {
+          "const": "connector_updated"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "connectorId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "updates": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "connector_waypoints_set": {
+      "type": "object",
+      "required": [
+        "event",
+        "connectorId"
+      ],
+      "properties": {
+        "event": {
+          "const": "connector_waypoints_set"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "connectorId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "waypoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "x",
+              "y"
+            ],
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "connector_waypoints_cleared": {
+      "type": "object",
+      "required": [
+        "event",
+        "connectorId"
+      ],
+      "properties": {
+        "event": {
+          "const": "connector_waypoints_cleared"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "connectorId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
