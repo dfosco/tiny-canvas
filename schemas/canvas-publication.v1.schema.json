@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/dfosco/tiny-canvas/main/schemas/canvas-publication.v1.schema.json",
   "title": "Tiny Canvas portable publication inventory v1",
-  "description": "Public, deterministic inventory of an independent, editable Tiny Canvas + React handoff project. Powers generated AGENTS.md, page routing, asset integrity checks, source ownership and safe republishing. This is not the Hypercanvas Notebook manifest or a private runtime registry.",
+  "description": "Public, deterministic inventory of an independent, editable Tiny Canvas + React handoff project. Powers generated AGENTS.md, page routing, asset integrity checks, source ownership and safe republishing. This is not the Hypercanvas Notebook manifest or a private runtime registry. A widget catalog entry records BOTH the original producer sourceType and normalized portableType so Tiny Canvas can rebuild presentations offline after teammates edit source JSONL.",
   "type": "object",
   "required": [
     "schemaVersion",
@@ -150,7 +150,8 @@
         "required": [
           "sourceType",
           "count",
-          "presentationKinds"
+          "presentationKinds",
+          "portableType"
         ],
         "properties": {
           "sourceType": {
@@ -215,6 +216,25 @@
               "type": "string",
               "minLength": 1
             }
+          },
+          "portableType": {
+            "enum": [
+              "note",
+              "markdown",
+              "image",
+              "link",
+              "frame",
+              "file",
+              "code",
+              "component",
+              "gallery",
+              "controls",
+              "prompt",
+              "terminal",
+              "agent",
+              "redacted",
+              "unavailable"
+            ]
           }
         },
         "additionalProperties": false
