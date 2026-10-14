@@ -1,3 +1,10 @@
+## Portable canvas publication (schema proposal)
+
+Tiny Canvas remains an **MDX/TSX-first** React canvas. A proposed additional JSONL materializer will let other tools, including Hypercanvas, publish source-editable canvas documents. Static compilation will rebuild **one canonical read-only presentation per widget** from the current portable JSONL on every build, so teammates can edit the sources without Hypercanvas.
+
+The public schema sources are in [`schemas/`](schemas/) (event log, read-only projection, and publication inventory). See the [portable contract](docs/portable-canvas-contract.md) and [implementation plan](docs/portable-canvas-implementation-plan.md). The schemas are included in the npm package by its build/pack script on this branch; the JSONL React materializer and static compiler themselves are **not implemented yet**.
+
+
 # Tiny Canvas
 
 Reusable React surfaces for arranging interface work and presenting it. `Canvas`
