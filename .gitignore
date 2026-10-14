@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# npm package schema mirrors copied from repository-level source during build
+packages/tiny-canvas/schemas/
