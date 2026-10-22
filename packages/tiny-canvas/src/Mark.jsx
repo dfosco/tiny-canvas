@@ -10,6 +10,8 @@ function Mark({
   minWidth = 200,
   minHeight = 60,
   onSizeChange,
+  onSizeCommit,
+  persistSize,
   className,
   ...blockProps
 }) {
@@ -26,6 +28,8 @@ function Mark({
       minWidth={minWidth}
       minHeight={minHeight}
       onSizeChange={onSizeChange}
+      onSizeCommit={onSizeCommit}
+      persistSize={persistSize}
       className={['tc-mark-block', className].filter(Boolean).join(' ')}
     >
       <article className="tc-mark">

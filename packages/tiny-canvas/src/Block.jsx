@@ -2,6 +2,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
@@ -33,6 +34,8 @@ function Block({
   y = 0,
   selected,
   onPositionChange,
+  onPositionCommit,
+  persistPosition = true,
   onSelectionChange,
   className,
   style,
@@ -46,7 +49,9 @@ function Block({
   const generatedId = useId().replaceAll(':', '');
   const resolvedId = blockId ?? id ?? `tc-block-${generatedId}`;
   const blockRef = useRef(null);
-  const [savedPosition] = useState(() => getSavedPosition(resolvedId));
+  const [savedPosition] = useState(() =>
+    persistPosition ? getSavedPosition(resolvedId) : null
+  );
   const canvas = useContext(CanvasContext);
   const [standaloneSelected, setStandaloneSelected] = useState(false);
   const [onTranslation, setOnTranslation] = useState(false);
@@ -62,6 +67,12 @@ function Block({
   const [rotationVariation, setRotationVariation] = useState(
     Math.random() < 0.5 ? -0.5 : 0.5
   );
+
+  useLayoutEffect(() => {
+    if (!persistPosition) {
+      setPosition(normalizePosition({ x, y }));
+    }
+  }, [persistPosition, x, y]);
 
   const isSelected =
     selected ??
@@ -123,8 +134,9 @@ function Block({
     onDragEnd: ({ offsetX, offsetY }) => {
       const nextPosition = normalizePosition({ x: offsetX, y: offsetY });
       setPosition(nextPosition);
-      savePosition(resolvedId, nextPosition);
+      if (persistPosition) savePosition(resolvedId, nextPosition);
       onPositionChange?.(nextPosition);
+      onPositionCommit?.(nextPosition);
     },
   });
 

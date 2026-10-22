@@ -57,6 +57,7 @@ function Canvas({
   onPointerDown,
   onWheel,
   onSelectionChange,
+  onReset,
   ...rest
 }) {
   const [selectedBlockId, setSelectedBlockId] = useState(null);
@@ -342,7 +343,7 @@ function Canvas({
             <button
               type="button"
               className="tc-canvas-control"
-              onClick={resetCanvas}
+              onClick={onReset || resetCanvas}
             >
               {resetLabel}
             </button>

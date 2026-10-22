@@ -44,6 +44,8 @@ function Frame({
   minWidth = DEFAULT_MIN_WIDTH,
   minHeight = DEFAULT_MIN_HEIGHT,
   onSizeChange,
+  onSizeCommit,
+  persistSize,
   id,
   blockId,
   selected,
@@ -417,6 +419,8 @@ function Frame({
       minWidth={minWidth}
       minHeight={minHeight}
       onSizeChange={onSizeChange}
+      onSizeCommit={onSizeCommit}
+      persistSize={persistSize}
       className={["tc-frame-block", className].filter(Boolean).join(" ")}
       style={style}
       onSelectionChange={(nextSelected) => {

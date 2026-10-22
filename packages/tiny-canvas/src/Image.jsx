@@ -17,6 +17,8 @@ function Image({
   onLoad,
   onError,
   onSizeChange,
+  onSizeCommit,
+  persistSize,
   className,
   ...blockProps
 }) {
@@ -45,6 +47,8 @@ function Image({
       minHeight={minHeight}
       aspectRatio={aspectRatio}
       onSizeChange={onSizeChange}
+      onSizeCommit={onSizeCommit}
+      persistSize={persistSize}
       className={['tc-image-block', className].filter(Boolean).join(' ')}
     >
       <figure className="tc-image">

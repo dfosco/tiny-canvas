@@ -20,6 +20,8 @@ function Note({
   minWidth = 180,
   minHeight = 60,
   onSizeChange,
+  onSizeCommit,
+  persistSize,
   className,
   ...blockProps
 }) {
@@ -41,6 +43,8 @@ function Note({
       minWidth={minWidth}
       minHeight={minHeight}
       onSizeChange={onSizeChange}
+      onSizeCommit={onSizeCommit}
+      persistSize={persistSize}
       className={['tc-note-block', className].filter(Boolean).join(' ')}
     >
       <article className="tc-note" data-color={color}>

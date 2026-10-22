@@ -14,6 +14,17 @@ export interface TinyCanvasPageRouteContext {
   routeBase: `/${string}`;
 }
 
+export interface TinyCanvasDocumentRouteContext {
+  /** Absolute JSONL filename. */
+  file: string;
+  /** JSONL filename relative to documentsPath. */
+  relativePath: string;
+  /** Route inferred from routeBase and relativePath. */
+  defaultRoute: `/${string}`;
+  /** Configured browser route prefix. */
+  routeBase: `/${string}`;
+}
+
 export interface TinyCanvasViteOptions {
   /** @deprecated Use routeBase. */
   pagesDir?: `/${string}`;
@@ -23,6 +34,12 @@ export interface TinyCanvasViteOptions {
   routeBase?: `/${string}`;
   /** Override the browser route inferred for a discovered page. */
   resolveRoute?: (page: TinyCanvasPageRouteContext) => `/${string}`;
+  /** Filesystem directory containing .canvas.jsonl documents. Default: 'src/canvas'. */
+  documentsPath?: string;
+  /** Override the browser route inferred for a discovered JSONL document. */
+  resolveDocumentRoute?: (
+    document: TinyCanvasDocumentRouteContext
+  ) => `/${string}`;
   /** Optional route-to-title overrides. */
   titles?: Readonly<Record<string, string>>;
   /** Optional default props keyed by exported widget type. */

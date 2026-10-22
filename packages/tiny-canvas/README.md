@@ -191,6 +191,57 @@ import pages from "virtual:tiny-canvas-pages";
 Tiny Canvas does not mutate the host router. Each registry route must still be
 registered by that router.
 
+## Hypercanvas JSONL documents
+
+The Vite plugin also discovers `.canvas.jsonl` files under `src/canvas` by
+default. It exposes a virtual registry with stable route IDs, source text,
+base-aware routes, and Vite-managed URLs for local image assets in the same
+tree. You can change the discovery directory or route mapping with
+`documentsPath` and `resolveDocumentRoute`.
+
+JSONL playback is an explicit package entry. Install the matching
+`@dfosco/hypercanvas` package as a peer dependency when using it, then import
+the renderer and registry:
+
+```tsx
+import CanvasDocument from "@dfosco/tiny-canvas/canvas-document";
+import documents from "virtual:tiny-canvas-documents";
+import { PrimaryButtons } from "./button-patterns.story";
+import "@dfosco/tiny-canvas/style.css";
+
+const document = documents.find((item) => item.id === "/canvas/button-patterns");
+
+export function ButtonPatternsPage() {
+  if (!document) return null;
+  return (
+    <CanvasDocument
+      {...document}
+      sourceExports={{ PrimaryButtons }}
+    />
+  );
+}
+```
+
+The renderer validates the complete JSONL stream through Hypercanvas before
+materializing it. Invalid, newer, or unknown-required documents render their
+diagnostics without reusing an earlier canvas. Sticky notes, Markdown, images,
+HTTP links, and same-origin prototype frames map to Tiny Canvas components.
+Images inside the document tree use Vite's emitted asset URLs. The renderer
+shows diagnostics for unsupported widgets, connectors, invalid geometry, or
+images whose local files are not found in the Vite asset registry.
+
+`sources` entries describe executable JSX companions. They are never converted
+to data or evaluated from export names. Pass each component explicitly through
+`sourceExports`; unbound exports produce a diagnostic. Drag and resize changes
+stay in browser localStorage under a document-specific versioned key. An
+override applies only while its saved source geometry still matches. **Reset
+local layout** clears that document's browser-local overrides. The document
+file is never written or served through a mutation endpoint.
+
+The default JSX entry (`@dfosco/tiny-canvas`) remains usable without installing
+Hypercanvas. Applications that import the JSONL entry must install the package
+that provides the public `@dfosco/hypercanvas/canvas/materializer` export.
+
 `Canvas` only accepts authorized canvas components. Use `Block` for arbitrary
 content, `Frame` for same-origin route previews, `Note` for sticky notes,
 `Mark` for Markdown, and `Link` for favicon-backed link cards. Passing a plain

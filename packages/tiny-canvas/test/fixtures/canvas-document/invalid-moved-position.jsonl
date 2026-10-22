@@ -1,0 +1,2 @@
+{"event":"canvas_created","widgets":[{"id":"w1","type":"sticky-note","position":{"x":0,"y":0},"props":{"text":"Legacy widget"}}]}
+{"event":"widget_moved","widgetId":"w1","position":{"x":24}}

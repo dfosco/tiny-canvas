@@ -41,7 +41,7 @@ type CanvasChild =
   | ReactElement<ImageProps, typeof Image>;
 
 export interface CanvasProps
-  extends Omit<HTMLAttributes<HTMLElement>, "onSelectionChange"> {
+  extends Omit<HTMLAttributes<HTMLElement>, "onSelectionChange" | "onReset"> {
   children?: CanvasChild | readonly CanvasChild[];
   /** Canvas page title. Overrides its filename in the page selector. */
   title?: string;
@@ -71,6 +71,8 @@ export interface CanvasProps
   onCopyChanges?: (changes: CanvasChange[], text: string) => void;
   /** Called when selection changes. Null means the canvas background is selected. */
   onSelectionChange?: (blockId: string | null) => void;
+  /** Called by resettable canvases instead of clearing Tiny Canvas shared layout state. */
+  onReset?: () => void;
 }
 
 export declare function Canvas(props: CanvasProps): ReactElement;
@@ -87,6 +89,10 @@ export interface BlockProps
   /** Controls selection when provided. */
   selected?: boolean;
   onPositionChange?: (position: Position) => void;
+  /** Called after a drag ends. */
+  onPositionCommit?: (position: Position) => void;
+  /** Disable Tiny Canvas's default position persistence for this block. */
+  persistPosition?: boolean;
   onSelectionChange?: (selected: boolean) => void;
 }
 
@@ -140,6 +146,10 @@ export interface FrameProps extends Omit<BlockProps, "children"> {
   minHeight?: number;
   /** Called while the frame is resized. */
   onSizeChange?: (size: Size) => void;
+  /** Called after a resize ends. */
+  onSizeCommit?: (size: Size) => void;
+  /** Disable Tiny Canvas's default size persistence for this block. */
+  persistSize?: boolean;
 }
 
 export declare function Frame(props: FrameProps): ReactElement;
@@ -275,6 +285,8 @@ export interface NoteProps extends Omit<BlockProps, "children"> {
   /** Minimum resizable height in pixels. Default: 60 */
   minHeight?: number;
   onSizeChange?: (size: Size) => void;
+  onSizeCommit?: (size: Size) => void;
+  persistSize?: boolean;
 }
 
 export declare function Note(props: NoteProps): ReactElement;
@@ -292,6 +304,8 @@ export interface MarkProps extends Omit<BlockProps, "children"> {
   /** Minimum resizable height in pixels. Default: 60 */
   minHeight?: number;
   onSizeChange?: (size: Size) => void;
+  onSizeCommit?: (size: Size) => void;
+  persistSize?: boolean;
 }
 
 export declare function Mark(props: MarkProps): ReactElement;
@@ -332,6 +346,8 @@ export interface ImageProps
   onLoad?: ImgHTMLAttributes<HTMLImageElement>["onLoad"];
   onError?: ImgHTMLAttributes<HTMLImageElement>["onError"];
   onSizeChange?: (size: Size) => void;
+  onSizeCommit?: (size: Size) => void;
+  persistSize?: boolean;
 }
 
 export declare function Image(props: ImageProps): ReactElement;

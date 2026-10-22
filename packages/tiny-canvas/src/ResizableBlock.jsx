@@ -1,4 +1,11 @@
-import { useContext, useEffect, useId, useRef, useState } from 'react';
+import {
+  useContext,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import Block from './Block';
 import { CanvasContext } from './CanvasContext';
 import { getSavedSize, saveSize } from './utils';
@@ -41,6 +48,8 @@ export default function ResizableBlock({
   minHeight,
   aspectRatio,
   onSizeChange,
+  onSizeCommit,
+  persistSize = true,
   id,
   blockId,
   className,
@@ -66,7 +75,7 @@ export default function ResizableBlock({
   const canvas = useContext(CanvasContext);
   const zoom = canvas?.zoom ?? 1;
   const [size, setSize] = useState(() => {
-    const savedSize = getSavedSize(resolvedId);
+    const savedSize = persistSize ? getSavedSize(resolvedId) : null;
     return {
       width:
         savedSize?.width === undefined
@@ -78,6 +87,12 @@ export default function ResizableBlock({
           : Math.max(minimumHeight, savedSize.height),
     };
   });
+
+  useLayoutEffect(() => {
+    if (!persistSize) {
+      setSize({ width: initialWidth, height: initialHeight });
+    }
+  }, [initialHeight, initialWidth, persistSize]);
 
   useEffect(() => {
     if (!lockedAspectRatio || aspectRatioRef.current === lockedAspectRatio) {
@@ -101,7 +116,7 @@ export default function ResizableBlock({
     currentSizeRef.current = nextSize;
     setSize(nextSize);
     onSizeChange?.(nextSize);
-    if (persist) {
+    if (persist && persistSize) {
       saveSize(resolvedId, nextSize);
     }
   };
@@ -115,7 +130,8 @@ export default function ResizableBlock({
     const nextSize = currentSizeRef.current;
     resizeStartRef.current = null;
     if (nextSize) {
-      saveSize(resolvedId, nextSize);
+      if (persistSize) saveSize(resolvedId, nextSize);
+      onSizeCommit?.(nextSize);
     }
   };
 
@@ -229,6 +245,7 @@ export default function ResizableBlock({
                 height: Math.max(minimumHeight, currentHeight + delta[1]),
               };
           updateSize(nextSize, true);
+          onSizeCommit?.(nextSize);
         }}
       />
     </Block>
