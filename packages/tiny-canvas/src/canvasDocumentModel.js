@@ -26,12 +26,47 @@ function diagnostic(code, message, itemId) {
   return { code, message, ...(itemId ? { itemId } : {}) };
 }
 
+function normalizeBasePath(value) {
+  const path = String(value || '/').replace(/^\/+|\/+$/g, '');
+  return path ? `/${path}/` : '/';
+}
+
+function applyBasePath(value, base) {
+  const suffixIndex = value.search(/[?#]/);
+  const path = suffixIndex === -1 ? value : value.slice(0, suffixIndex);
+  const suffix = suffixIndex === -1 ? '' : value.slice(suffixIndex);
+  const prefix = normalizeBasePath(base);
+  if (prefix === '/') return `${path.startsWith('/') ? path : `/${path}`}${suffix}`;
+
+  const prefixWithoutSlash = prefix.slice(0, -1);
+  const alreadyPrefixed =
+    path === prefixWithoutSlash || path.startsWith(prefix);
+  if (alreadyPrefixed) return `${path}${suffix}`;
+
+  return `${prefix}${path.replace(/^\/+/, '')}${suffix}`;
+}
+
+function isSameOriginHttpUrl(value, currentOrigin) {
+  if (!currentOrigin) return false;
+  try {
+    const target = new URL(value);
+    const current = new URL(currentOrigin);
+    return (
+      ['http:', 'https:'].includes(target.protocol) &&
+      target.origin === current.origin
+    );
+  } catch {
+    return false;
+  }
+}
+
 function resolveUrl(value, appBase, resourceBase, resource = false, assets = {}) {
   if (typeof value !== 'string' || !value.trim()) return null;
   if (/^(https?:|data:|blob:)/i.test(value)) {
     return value;
   }
   if (/^[a-z][a-z\d+.-]*:/i.test(value)) return null;
+  if (value.startsWith('//')) return null;
 
   if (resource) {
     const assetPath = value.replace(/^\.\//, '');
@@ -42,10 +77,9 @@ function resolveUrl(value, appBase, resourceBase, resource = false, assets = {})
 
   const basePath = resource ? resourceBase : appBase;
   if (value.startsWith('/')) {
-    const prefix = String(appBase || '/').replace(/\/?$/, '/');
-    return `${prefix}${value.replace(/^\/+/, '')}`;
+    return applyBasePath(value, appBase);
   }
-  const prefix = String(basePath || '/').replace(/\/?$/, '/');
+  const prefix = normalizeBasePath(basePath);
   return `${prefix}${value.replace(/^\.\//, '')}`;
 }
 
@@ -67,6 +101,7 @@ export function projectCanvasDocument(
     assets = {},
     sourceExports = {},
     overrides = {},
+    currentOrigin = globalThis.location?.origin,
   } = {}
 ) {
   const diagnostics = [];
@@ -184,7 +219,11 @@ export function projectCanvasDocument(
         );
       }
       const route = resolveUrl(props.src ?? props.route, appBase, resourceBase);
-      if (!route || /^[a-z][a-z\d+.-]*:/i.test(route)) {
+      const absoluteRoute = /^[a-z][a-z\d+.-]*:/i.test(route || '');
+      if (
+        !route ||
+        (absoluteRoute && !isSameOriginHttpUrl(route, currentOrigin))
+      ) {
         diagnostics.push(
           diagnostic(
             'unsupported_prototype_source',
@@ -196,10 +235,7 @@ export function projectCanvasDocument(
       }
       try {
         const target = new URL(route, 'https://tiny-canvas.invalid');
-        if (
-          target.origin !== 'https://tiny-canvas.invalid' &&
-          !['http:', 'https:'].includes(target.protocol)
-        ) {
+        if (!absoluteRoute && target.origin !== 'https://tiny-canvas.invalid') {
           throw new TypeError('unsupported protocol');
         }
       } catch {

@@ -9,6 +9,87 @@ const referenceText = readFileSync(
 const referenceState = JSON.parse(referenceText.split(/\r?\n/, 1)[0]);
 
 describe('canvas document projection', () => {
+  it('does not duplicate an app base already present in prototype and resource paths', () => {
+    const { items, diagnostics } = projectCanvasDocument(
+      {
+        widgets: [
+          {
+            id: 'prefixed-prototype',
+            type: 'prototype',
+            position: { x: 0, y: 0 },
+            props: { src: '/branch--demo/Prototype?variant=a#state' },
+          },
+          {
+            id: 'prefixed-image',
+            type: 'image',
+            position: { x: 0, y: 0 },
+            props: { src: '/branch--demo/assets/image.png?size=2#preview' },
+          },
+          {
+            id: 'unprefixed-prototype',
+            type: 'prototype',
+            position: { x: 0, y: 0 },
+            props: { src: '/Prototype?variant=b#next' },
+          },
+          {
+            id: 'relative-prototype',
+            type: 'prototype',
+            position: { x: 0, y: 0 },
+            props: { src: 'Prototype?variant=c#last' },
+          },
+          {
+            id: 'prefix-lookalike',
+            type: 'prototype',
+            position: { x: 0, y: 0 },
+            props: { src: '/branch--demo-copy/Prototype?variant=d#lookalike' },
+          },
+        ],
+      },
+      { appBase: '/branch--demo/', resourceBase: '/branch--demo/docs/' }
+    );
+
+    expect(diagnostics).toEqual([]);
+    expect(items.map((item) => item.props.route ?? item.props.src)).toEqual([
+      '/branch--demo/Prototype?variant=a#state',
+      '/branch--demo/assets/image.png?size=2#preview',
+      '/branch--demo/Prototype?variant=b#next',
+      '/branch--demo/Prototype?variant=c#last',
+      '/branch--demo/branch--demo-copy/Prototype?variant=d#lookalike',
+    ]);
+  });
+
+  it('accepts only same-origin absolute prototype URLs and leaves foreign origins diagnostic', () => {
+    const { items, diagnostics } = projectCanvasDocument(
+      {
+        widgets: [
+          {
+            id: 'same-origin',
+            type: 'prototype',
+            position: { x: 0, y: 0 },
+            props: { src: 'https://demo.test/Prototype?variant=a#state' },
+          },
+          {
+            id: 'foreign-origin',
+            type: 'prototype',
+            position: { x: 0, y: 0 },
+            props: { src: 'https://elsewhere.test/Prototype?variant=b#state' },
+          },
+        ],
+      },
+      { appBase: '/branch--demo/', currentOrigin: 'https://demo.test' }
+    );
+
+    expect(items.map((item) => [item.id, item.props.route])).toEqual([
+      ['same-origin', 'https://demo.test/Prototype?variant=a#state'],
+    ]);
+    expect(diagnostics).toEqual([
+      expect.objectContaining({
+        code: 'unsupported_prototype_source',
+        itemId: 'foreign-origin',
+      }),
+    ]);
+  });
+
   it('maps supported reference widgets with stable identities and preserves local routes', () => {
     const { items, diagnostics } = projectCanvasDocument(referenceState, {
       appBase: '/preview/',
