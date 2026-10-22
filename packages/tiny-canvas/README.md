@@ -241,6 +241,8 @@ file is never written or served through a mutation endpoint.
 The default JSX entry (`@dfosco/tiny-canvas`) remains usable without installing
 Hypercanvas. Applications that import the JSONL entry must install the package
 that provides the public `@dfosco/hypercanvas/canvas/materializer` export.
+For a complete ordinary Vite app built from a real canvas and prototype, see the
+[independent consumer example](https://github.com/dfosco/tiny-canvas/tree/main/examples/ordinary-repo-prototype).
 
 `Canvas` only accepts authorized canvas components. Use `Block` for arbitrary
 content, `Frame` for same-origin route previews, `Note` for sticky notes,
